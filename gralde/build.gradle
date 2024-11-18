@@ -1,0 +1,57 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.5'
+	id 'io.spring.dependency-management' version '1.1.6'
+	id 'info.solidsoft.pitest' version '1.5.0'
+	id 'jacoco'
+}
+
+group = 'com.pragma'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+	testRuntimeOnly 'org.pitest:pitest-junit5-plugin:1.2.0'
+
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+pitest {
+	targetClasses = ['com.pragma.mutation.*'] // Clases objetivo
+	mutators = ['ALL'] // Mutaciones completas
+	verbose = true
+	outputFormats = ['HTML', 'XML'] // Informes detallados
+	pitestVersion = '1.16.1'
+	threads = 4
+	failWhenNoMutations = false // Evitar fallos si no encuentra mutaciones
+}
+jacoco {
+	toolVersion = "0.8.8"
+}
+tasks.jacocoTestReport {
+	dependsOn tasks.test // Ejecutar pruebas antes de generar el informe
+	reports {
+		xml.required.set(true) // Necesario para integraciones (como SonarQube)
+		html.required.set(true) // Generar un informe HTML para inspección manual
+		csv.required.set(false)
+	}
+}
+
+tasks.test {
+	finalizedBy(tasks.jacocoTestReport) // Generar informe de JaCoCo después de las pruebas
+}
